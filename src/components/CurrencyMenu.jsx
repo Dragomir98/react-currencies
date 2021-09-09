@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
+import CurrencyGroup from "./CurrencyGroup";
 import Loader from "./Loader";
 
 // export const currencyList = ["USD", "EUR", "AUD", "CAD", "CHF", "NZD", "BGN"];
@@ -22,7 +23,7 @@ export const apiRequest = (apiVersion, startCurrency, endCurrency) => {
   ];
 };
 
-export default function CurrencyMenu() {
+export default function CurrencyMenu(props) {
   const [listOption, setListOption] = useState(currencyList[0].value);
   const [requestResults, setRequestResults] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
@@ -79,7 +80,6 @@ export default function CurrencyMenu() {
   };
 
   useEffect(() => {
-    setListOption(listOption);
     for (let i in currencyList) {
       if (listOption === currencyList[i].value) {
         console.log(`${listOption}, ${currencyList[i].value}`);
@@ -101,37 +101,30 @@ export default function CurrencyMenu() {
         {loading ? (
           <Loader />
         ) : (
-          loadedCurrencyRates.map((rate) => (
-            <section key={rate}>
-              <div className="rates-group">
-                <div className="output">
-                  {rate[1] < 1 && (
-                    <div>
-                      {listOption}-{rate[0].toUpperCase()}: {rate[1]}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="rates-group">
-                <div className="output">
-                  {rate[1] >= 1 && rate[1] <= 1.5 && (
-                    <div>
-                      {listOption}-{rate[0].toUpperCase()}: {rate[1]}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="rates-group">
-                <div className="output">
-                  {rate[1] > 1.5 && (
-                    <div>
-                      {listOption}-{rate[0].toUpperCase()}: {rate[1]}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          ))
+          <div className="rates-container">
+            <CurrencyGroup
+              arr={loadedCurrencyRates}
+              option={listOption}
+              filterStatement={(filteredRate) => filteredRate[1] < 1}
+              groupId={1}
+            />
+
+            <CurrencyGroup
+              arr={loadedCurrencyRates}
+              option={listOption}
+              filterStatement={(filteredRate) =>
+                filteredRate[1] >= 1 && filteredRate[1] <= 1.5
+              }
+              groupId={2}
+            />
+
+            <CurrencyGroup
+              arr={loadedCurrencyRates}
+              option={listOption}
+              filterStatement={(filteredRate) => filteredRate[1] > 1.5}
+              groupId={3}
+            />
+          </div>
         )}
       </div>
     </div>
