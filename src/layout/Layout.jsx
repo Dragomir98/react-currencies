@@ -1,11 +1,12 @@
 import React from "react";
-import Navbar from "./Navbar";
+import { Container } from "react-bootstrap";
+import NavbarMenu from "./Navbar";
 
 export default function Layout(props) {
   return (
     <>
-      <Navbar />
-      {props.children}
+      <NavbarMenu />
+      <Container> {props.children}</Container>
     </>
   );
 }
