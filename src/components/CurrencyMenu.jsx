@@ -1,63 +1,39 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Container, Row } from "react-bootstrap";
+import { Row, Tab, Tabs, Container } from "react-bootstrap";
 import Select from "react-select";
-import { readFromCache, removeFromCache, writeToCache } from "../pages/Home";
+import {
+  apiRequest,
+  clearLocalStorage,
+  currencyList,
+  difference,
+  readFromCache,
+  removeFromCache,
+  writeToCache,
+} from "../pages/Home";
 import CurrencyGroup from "./CurrencyGroup";
+import CurrentRates from "./CurrentRates";
 import Loader from "./Loader";
 
-export const currencyList = [
-  { value: "USD", label: "USD" },
-  { value: "EUR", label: "EUR" },
-  { value: "AUD", label: "AUD" },
-  { value: "CAD", label: "CAD" },
-  { value: "CHF", label: "CHF" },
-  { value: "NZD", label: "NZD" },
-  { value: "BGN", label: "BGN" },
-];
-
-export const apiRequest = (apiVersion, startCurrency, endCurrency) => {
-  return [
-    `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@${apiVersion}/latest/currencies/${startCurrency}/${endCurrency}.json`,
-    startCurrency,
-    endCurrency,
-  ];
-};
-
-export const clearLocalStorage = () => {
-  const actualTime = new Date(Date.now());
-  const endOfDay = new Date(
-    actualTime.getFullYear(),
-    actualTime.getMonth(),
-    actualTime.getDate() + 1,
-    0,
-    0,
-    0
-  );
-  const remainingTime = endOfDay.getTime() - actualTime.getTime();
-  setTimeout(() => {
-    console.log("The end of the current day has come");
-    // localStorage.removeItem("requestResults");
-    // localStorage.removeItem("exchangeRates");
-    removeFromCache("requestResults");
-    removeFromCache("exchangeRates");
-  }, remainingTime);
-};
-
-export default function CurrencyMenu(props) {
+export default function CurrencyMenu() {
   const [listOption, setListOption] = useState(currencyList[0].value);
   const [requestResults, setRequestResults] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  //chunks of array items
+  //split items from request into chunks
   const [chunkedRates, setChunkedRates] = useState([]);
   const [loadedCurrencyRates, setLoadedCurrencyRates] = useState([]);
 
+  //local storage data:
+  const [storageRates, setStorageRates] = useState([]);
+  const [storageRequestResults, setStorageRequestResults] = useState([]);
+  const [absoluteValues, setAbsoluteValues] = useState([]);
+
+  const [renderedState, setRenderedState] = useState([]);
+
   useEffect(async () => {
     if (!readFromCache("exchangeRates") || !readFromCache("requestResults")) {
-      console.log("rates not found in local storage");
-
       for (let i in currencyList) {
         for (let j in currencyList) {
           if (currencyList[i].value !== currencyList[j].value) {
@@ -92,7 +68,6 @@ export default function CurrencyMenu(props) {
       //saving the exchange rates in local storage
       writeToCache("exchangeRates", exchangeRates);
     } else {
-      console.log("getting exchangeRates data from local storage");
       const storageRequestResults = readFromCache("exchangeRates");
 
       for (let i in storageRequestResults) {
@@ -116,18 +91,77 @@ export default function CurrencyMenu(props) {
     setLoading(false);
   }, []);
 
-  //rates for current selected currency
+  // rates for current selected currency
   const handleCurrencyChange = (e) => {
     const newValue = e.value;
     setListOption(newValue);
+    removeFromCache("storageRates");
+    removeFromCache("storageCurrency");
+    removeFromCache("absoluteValues");
+    setStorageRates([]);
+    setStorageRequestResults([]);
+    setAbsoluteValues([]);
   };
 
-  useEffect(() => {
+  useEffect(async () => {
     for (let i in currencyList) {
       if (listOption === currencyList[i].value) {
         setLoadedCurrencyRates(chunkedRates[i]);
       }
     }
+
+    if (!readFromCache("requestResults") || !readFromCache("storageCurrency")) {
+      setLoading(true);
+      const requestsFromStorage = readFromCache("requestResults");
+      for (let i in requestsFromStorage) {
+        if (requestsFromStorage[i][0].includes(listOption.toLowerCase())) {
+          storageRates.push(requestsFromStorage[i]);
+        }
+      }
+
+      let storageId = 1;
+      for (let i in storageRates) {
+        const storageRequest = await axios
+          .get(storageRates[i][0])
+          .then((res) => res.data);
+        const storageCurrency = [Object.values(storageRequest)[1]].concat(
+          storageRates[i][1],
+          storageRates[i][2],
+          storageId
+        );
+        storageRequestResults.push(storageCurrency);
+        storageId++;
+      }
+      writeToCache("storageCurrency", storageRequestResults);
+      setLoading(false);
+    } else {
+      const storageCurrency = readFromCache("storageCurrency");
+      setStorageRequestResults(storageCurrency);
+    }
+
+    if (!readFromCache("absoluteValues")) {
+      for (let i = 0; i < storageRequestResults.length; i++) {
+        let currentVal;
+        for (let j = i + 1; j < storageRequestResults.length; j++) {
+          if (
+            difference(
+              storageRequestResults[i][0].toFixed(1),
+              storageRequestResults[j][0].toFixed(1)
+            ) <= 0.5
+          ) {
+            currentVal = storageRequestResults[i];
+          }
+        }
+        if (Boolean(currentVal)) absoluteValues.push(storageRequestResults[i]);
+      }
+      writeToCache("absoluteValues", absoluteValues);
+      setAbsoluteValues(absoluteValues);
+    } else {
+      const absoluteValues = readFromCache("absoluteValues");
+      setAbsoluteValues(absoluteValues);
+    }
+
+    setRenderedState((prevState) => ({ ...prevState, absoluteValues }));
   }, [listOption]);
 
   return (
@@ -143,32 +177,45 @@ export default function CurrencyMenu(props) {
         {loading ? (
           <Loader />
         ) : (
-          <Container className="rates-container">
-            <Row>
-              <CurrencyGroup
-                arr={loadedCurrencyRates}
-                option={listOption}
-                filterStatement={(filteredRate) => filteredRate[1] < 1}
-                groupId={1}
-              />
-
-              <CurrencyGroup
-                arr={loadedCurrencyRates}
-                option={listOption}
-                filterStatement={(filteredRate) =>
-                  filteredRate[1] >= 1 && filteredRate[1] <= 1.5
-                }
-                groupId={2}
-              />
-
-              <CurrencyGroup
-                arr={loadedCurrencyRates}
-                option={listOption}
-                filterStatement={(filteredRate) => filteredRate[1] > 1.5}
-                groupId={3}
-              />
-            </Row>
-          </Container>
+          <Tabs
+            defaultActiveKey="rates1"
+            className="my-4 justify-content-center"
+          >
+            <Tab eventKey="rates1" title="Exchange rates for current currency">
+              <Container>
+                <Row>
+                  <CurrencyGroup
+                    arr={loadedCurrencyRates}
+                    option={listOption}
+                    filterStatement={(filteredRate) => filteredRate[1] < 1}
+                    groupId={1}
+                  />
+                  <CurrencyGroup
+                    arr={loadedCurrencyRates}
+                    option={listOption}
+                    filterStatement={(filteredRate) =>
+                      filteredRate[1] >= 1 && filteredRate[1] <= 1.5
+                    }
+                    groupId={2}
+                  />
+                  <CurrencyGroup
+                    arr={loadedCurrencyRates}
+                    option={listOption}
+                    filterStatement={(filteredRate) => filteredRate[1] > 1.5}
+                    groupId={3}
+                  />
+                </Row>
+              </Container>
+            </Tab>
+            <Tab eventKey="rates2" title="All possible rates">
+              <Container>
+                <CurrentRates
+                  values={absoluteValues}
+                  selectedCurrency={listOption}
+                />
+              </Container>
+            </Tab>
+          </Tabs>
         )}
       </div>
     </div>
