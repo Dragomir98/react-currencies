@@ -1,4 +1,9 @@
-.currency-select {
+.currency-select,
+.currency-output {
   max-width: 400px;
   margin: auto;
+}
+
+.css-9gakcf-option {
+  display: none !important;
 }

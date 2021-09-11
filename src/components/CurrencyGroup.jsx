@@ -5,6 +5,7 @@ const CurrencyGroup = ({ arr, option, filterStatement, groupId }) => {
   return (
     <Col
       lg={4}
+      md={6}
       sm={6}
       xs={12}
       className={`mx-auto ${
@@ -12,17 +13,19 @@ const CurrencyGroup = ({ arr, option, filterStatement, groupId }) => {
       }`}
     >
       {arr.filter(filterStatement).length >= 1 && (
-        <Card className="my-3">
-          <Card.Header>Group {groupId}:</Card.Header>
-          <Card.Body>
+        <Card className="my-3 border border-secondary">
+          <Card.Header className="text-center bg-secondary text-white">
+            Group {groupId}:
+          </Card.Header>
+          <Card.Body className="text-center">
             <div>
               {arr.filter(filterStatement).map((rate) => (
                 <div key={rate[1]}>
-                  {option}-{rate[0].toUpperCase()}: {rate[1]}
+                  {option}-{rate[0].toUpperCase()}: {rate[1].toFixed(1)}
                 </div>
               ))}
             </div>
-            <Card.Subtitle className="mt-2">
+            <Card.Subtitle className="mt-2 text-center">
               Count: {arr.filter(filterStatement).length}
             </Card.Subtitle>
           </Card.Body>
