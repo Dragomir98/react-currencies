@@ -5,7 +5,7 @@ import { LinkContainer } from "react-router-bootstrap";
 export default function NavbarMenu() {
   return (
     <Navbar mr={5} bg="dark" variant="dark" expand="sm" className="px-4">
-      <LinkContainer to="/currencies">
+      <LinkContainer to="/">
         <Navbar.Brand>Home</Navbar.Brand>
       </LinkContainer>
     </Navbar>

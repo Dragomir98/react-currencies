@@ -9,10 +9,7 @@ function App() {
   return (
     <Layout>
       <Switch>
-        <Route exact path="/currencies" component={Home} />
-        <Route exact path="/">
-          <Redirect to="/currencies" />
-        </Route>
+        <Route exact path="/" component={Home} />
       </Switch>
     </Layout>
   );
