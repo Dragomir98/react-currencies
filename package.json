@@ -1,6 +1,6 @@
 {
-  "name": "react-currencies",
   "homepage": "https://dragomir98.github.io/react-currencies/",
+  "name": "react-currencies",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
