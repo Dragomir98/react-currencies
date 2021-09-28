@@ -188,7 +188,7 @@ export default function CurrencyMenu() {
                     arr={loadedCurrencyRates}
                     option={listOption}
                     filterStatement={(filteredRate) => filteredRate[1] < 1}
-                    groupId={1}
+                    groupDescription="less than 1"
                   />
                   <CurrencyGroup
                     arr={loadedCurrencyRates}
@@ -196,13 +196,13 @@ export default function CurrencyMenu() {
                     filterStatement={(filteredRate) =>
                       filteredRate[1] >= 1 && filteredRate[1] <= 1.5
                     }
-                    groupId={2}
+                    groupDescription="between 1 and 1.5"
                   />
                   <CurrencyGroup
                     arr={loadedCurrencyRates}
                     option={listOption}
                     filterStatement={(filteredRate) => filteredRate[1] > 1.5}
-                    groupId={3}
+                    groupDescription="bigger than 1.5"
                   />
                 </Row>
               </Container>

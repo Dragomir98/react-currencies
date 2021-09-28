@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col } from "react-bootstrap";
 
-const CurrencyGroup = ({ arr, option, filterStatement, groupId }) => {
+const CurrencyGroup = ({ arr, option, filterStatement, groupDescription }) => {
   return (
     <Col
       lg={4}
@@ -15,7 +15,7 @@ const CurrencyGroup = ({ arr, option, filterStatement, groupId }) => {
       {arr.filter(filterStatement).length >= 1 && (
         <Card className="my-3 border border-secondary">
           <Card.Header className="text-center bg-secondary text-white">
-            Group {groupId}:
+            Rates {groupDescription}
           </Card.Header>
           <Card.Body className="text-center">
             <div>
